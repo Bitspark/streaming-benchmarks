@@ -134,7 +134,7 @@ run() {
 	echo 'storm.workers: 1' >> $CONF_FILE
 	echo 'storm.ackers: 2' >> $CONF_FILE
 	echo 'spark.batchtime: 2000' >> $CONF_FILE
-	
+
     $MVN clean install -Dspark.version="$SPARK_VERSION" -Dkafka.version="$KAFKA_VERSION" -Dflink.version="$FLINK_VERSION" -Dstorm.version="$STORM_VERSION" -Dscala.binary.version="$SCALA_BIN_VERSION" -Dscala.version="$SCALA_BIN_VERSION.$SCALA_SUB_VERSION"
 
     #Fetch and build Redis
@@ -199,6 +199,14 @@ run() {
   then
     stop_if_needed kafka\.Kafka Kafka
     rm -rf /tmp/kafka-logs/
+  elif [ "START_SLANG" = "$OPERATION" ];
+  then
+    echo "STARTING SLANG..."
+    sleep 5
+  elif [ "STOP_SLANG" = "$OPERATION" ];
+  then
+    echo "STOPPING SLANG..."
+    sleep 5
   elif [ "START_FLINK" = "$OPERATION" ];
   then
     start_if_needed org.apache.flink.runtime.jobmanager.JobManager Flink 1 $FLINK_DIR/bin/start-cluster.sh
@@ -225,6 +233,14 @@ run() {
     cd data
     $LEIN run -g --configPath ../$CONF_FILE || true
     cd ..
+  elif [ "START_SLANG_PROCESSING" = "$OPERATION" ];
+  then
+    echo "STARTING SLANG PROCESSING..."
+    sleep 5
+  elif [ "STOP_SLANG_PROCESSING" = "$OPERATION" ];
+  then
+    echo "STOPPING SLANG PROCESSING..."
+    sleep 5
   elif [ "START_STORM_TOPOLOGY" = "$OPERATION" ];
   then
     "$STORM_DIR/bin/storm" jar ./storm-benchmarks/target/storm-benchmarks-0.1.0.jar storm.benchmark.AdvertisingTopology test-topo -conf $CONF_FILE
@@ -254,6 +270,21 @@ run() {
       "$FLINK_DIR/bin/flink" cancel $FLINK_ID
       sleep 3
     fi
+  elif [ "SLANG_TEST" = "$OPERATION" ];
+  then
+    run "START_ZK"
+    run "START_REDIS"
+    run "START_KAFKA"
+    run "START_SLANG"
+    run "START_SLANG_PROCESSING"
+    run "START_LOAD"
+    sleep $TEST_TIME
+    run "STOP_LOAD"
+    run "STOP_SLANG_PROCESSING"
+    run "STOP_SLANG"
+    run "STOP_KAFKA"
+    run "STOP_REDIS"
+    run "STOP_ZK"
   elif [ "STORM_TEST" = "$OPERATION" ];
   then
     run "START_ZK"
@@ -302,6 +333,8 @@ run() {
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
     run "STOP_LOAD"
+    run "STOP_SLANG_PROCESSING"
+    run "STOP_SLANG"
     run "STOP_SPARK_PROCESSING"
     run "STOP_SPARK"
     run "STOP_FLINK_PROCESSING"
@@ -327,13 +360,17 @@ run() {
     echo "STOP_KAFKA: kill kafka"
     echo "START_LOAD: run kafka load generation"
     echo "STOP_LOAD: kill kafka load generation"
+    echo "START_SLANG: run slang processes"
+    echo "STOP_SLANG: kill slang processes"
     echo "START_STORM: run storm daemons in the background"
     echo "STOP_STORM: kill the storm daemons"
     echo "START_FLINK: run flink processes"
     echo "STOP_FLINK: kill flink processes"
     echo "START_SPARK: run spark processes"
     echo "STOP_SPARK: kill spark processes"
-    echo 
+    echo
+    echo "START_SLANG_PROCESSING: run the slang test processing"
+    echo "STOP_SLANG_PROCESSSING: kill the slang test processing"
     echo "START_STORM_TOPOLOGY: run the storm test topology"
     echo "STOP_STORM_TOPOLOGY: kill the storm test topology"
     echo "START_FLINK_PROCESSING: run the flink test processing"
@@ -341,6 +378,7 @@ run() {
     echo "START_SPARK_PROCESSING: run the spark test processing"
     echo "STOP_SPARK_PROCESSSING: kill the spark test processing"
     echo
+    echo "SLANG_TEST: run slang test (assumes SETUP is done)"
     echo "STORM_TEST: run storm test (assumes SETUP is done)"
     echo "FLINK_TEST: run flink test (assumes SETUP is done)"
     echo "SPARK_TEST: run spark test (assumes SETUP is done)"
