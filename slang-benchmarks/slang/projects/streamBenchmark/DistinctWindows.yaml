@@ -1,0 +1,80 @@
+name: ""
+displayName: ""
+icon: ""
+shortDescription: ""
+description: ""
+services:
+  main:
+    in:
+      type: stream
+      stream:
+        type: map
+        map:
+          campaign_id:
+            type: string
+          seen:
+            type: number
+          timestamp:
+            type: string
+          windowKey:
+            type: string
+    out:
+      type: stream
+      stream:
+        type: map
+        map:
+          campaign_id:
+            type: string
+          seen:
+            type: number
+          timestamp:
+            type: string
+          windowKey:
+            type: string
+operators:
+  Concatenate:
+    operator: slang.string.Concatenate
+  Distinct:
+    operator: slang.stream.Distinct
+    generics:
+      itemType:
+        type: map
+        map:
+          campaign_id:
+            type: string
+          seen:
+            type: number
+          timestamp:
+            type: string
+          windowKey:
+            type: string
+  Evaluate:
+    operator: slang.data.Evaluate
+    properties:
+      expression: ""
+      variables:
+      - campaign_id_a
+      - timestamp_a
+      - campaign_id_b
+      - timestamp_b
+connections:
+  (:
+  - (Distinct
+  Concatenate):
+  - (Distinct.hasher
+  Distinct):
+  - )
+  Distinct.checker)a.campaign_id:
+  - campaign_id_a(Evaluate
+  Distinct.checker)a.timestamp:
+  - timestamp_a(Evaluate
+  Distinct.checker)b.campaign_id:
+  - campaign_id_b(Evaluate
+  Distinct.checker)b.timestamp:
+  - timestamp_b(Evaluate
+  Distinct.hasher)campaign_id:
+  - a(Concatenate
+  Distinct.hasher)timestamp:
+  - b(Concatenate
+  Evaluate):
+  - (Distinct.checker

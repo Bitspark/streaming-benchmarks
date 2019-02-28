@@ -1,0 +1,124 @@
+name: ""
+displayName: ""
+icon: ""
+shortDescription: ""
+description: ""
+services:
+  main:
+    in:
+      type: map
+      map:
+        campaign_id:
+          type: string
+        seen:
+          type: number
+        timestamp:
+          type: string
+    out:
+      type: number
+operators:
+  Convert:
+    operator: slang.data.Convert
+    generics:
+      fromType:
+        type: number
+      toType:
+        type: string
+  RedisHGet:
+    operator: slang.database.RedisHGet
+    properties:
+      host: localhost:6379
+      password: ""
+  RedisHGet1:
+    operator: slang.database.RedisHGet
+    properties:
+      host: localhost:6379
+      password: ""
+  RedisHIncrBy:
+    operator: slang.database.RedisHIncrBy
+    properties:
+      host: localhost:6379
+      password: ""
+  RedisHSet:
+    operator: slang.database.RedisHSet
+    properties:
+      host: localhost:6379
+      password: ""
+  RedisLPush:
+    operator: slang.database.RedisLPush
+    properties:
+      host: localhost:6379
+      password: ""
+  RedisLPush1:
+    operator: slang.database.RedisLPush
+    properties:
+      host: localhost:6379
+      password: ""
+  UNIXMillis:
+    operator: slang.time.UNIXMillis
+  UUID:
+    operator: slang.data.UUID
+  UUID1:
+    operator: slang.data.UUID
+  Value:
+    operator: slang.data.Value
+    properties:
+      value: windows
+    generics:
+      valueType:
+        type: string
+  Value1:
+    operator: slang.data.Value
+    properties:
+      value: time_updated
+    generics:
+      valueType:
+        type: string
+  Value2:
+    operator: slang.data.Value
+    properties:
+      value: seen_count
+    generics:
+      valueType:
+        type: string
+connections:
+  Convert):
+  - value(RedisHSet
+  - value(RedisLPush1
+  RedisHGet):
+  - key(RedisHSet
+  - (Value1
+  - (UNIXMillis
+  - key(RedisHIncrBy
+  RedisHGet.creator)field:
+  - value(RedisLPush
+  RedisHGet.creator)key:
+  - (UUID
+  - key(RedisHGet1
+  - (Value
+  RedisHGet1):
+  - key(RedisLPush
+  RedisHGet1.creator)key:
+  - (UUID1
+  RedisHIncrBy):
+  - )
+  UNIXMillis):
+  - (Convert
+  UUID):
+  - (RedisHGet.creator
+  UUID1):
+  - (RedisHGet1.creator
+  Value):
+  - field(RedisHGet1
+  Value1):
+  - field(RedisHSet
+  - key(RedisLPush1
+  Value2):
+  - field(RedisHIncrBy
+  campaign_id(:
+  - key(RedisHGet
+  seen(:
+  - value(RedisHIncrBy
+  - (Value2
+  timestamp(:
+  - field(RedisHGet

@@ -1,0 +1,183 @@
+name: ""
+displayName: ""
+icon: ""
+shortDescription: ""
+description: ""
+services:
+  main:
+    in:
+      type: trigger
+    out:
+      type: stream
+      stream:
+        type: number
+operators:
+  CampaignWindow:
+    operator: streamBenchmark.CampaignWindow
+  Clock:
+    operator: slang.time.Clock
+    properties:
+      interval: 1000
+  Count:
+    operator: slang.stream.Count
+    generics:
+      itemType:
+        type: trigger
+  DistinctWindows:
+    operator: streamBenchmark.DistinctWindows
+  Evaluate:
+    operator: slang.data.Evaluate
+    properties:
+      expression: event_type == "view"
+      variables:
+      - event_type
+  Filter:
+    operator: slang.stream.Filter
+    generics:
+      itemType:
+        type: map
+        map:
+          ad_id:
+            type: string
+          event_time:
+            type: string
+          event_type:
+            type: string
+  JSONRead:
+    operator: slang.encoding.JSONRead
+    generics:
+      itemType:
+        type: map
+        map:
+          ad_id:
+            type: string
+          event_time:
+            type: string
+          event_type:
+            type: string
+  KafkaSubscribe:
+    operator: slang.database.KafkaSubscribe
+    properties:
+      brokers:
+      - localhost:9092
+      topic: ad-events
+  MemoryWrite:
+    operator: slang.database.MemoryWrite
+    properties:
+      store: campaignBuckets
+    generics:
+      valueType:
+        type: map
+        map:
+          seen:
+            type: number
+          timestamp:
+            type: string
+  RedisRead:
+    operator: slang.database.RedisGet
+    properties:
+      host: localhost:6379
+      password: ""
+  SemaphoreP:
+    operator: slang.control.SemaphoreP
+    properties:
+      semaphore: windowSem
+    generics:
+      itemType:
+        type: number
+  SemaphoreV:
+    operator: slang.control.SemaphoreV
+    properties:
+      semaphore: windowSem
+    generics:
+      itemType:
+        type: trigger
+  Value:
+    operator: slang.data.Value
+    properties:
+      value: 0
+    generics:
+      valueType:
+        type: number
+  WindowCollect:
+    operator: slang.stream.WindowCollect
+    properties:
+      store: windows
+    generics:
+      itemType:
+        type: map
+        map:
+          campaign_id:
+            type: string
+          seen:
+            type: number
+          timestamp:
+            type: string
+          windowKey:
+            type: string
+  WindowRelease:
+    operator: slang.stream.WindowRelease
+    properties:
+      store: windows
+    generics:
+      itemType:
+        type: map
+        map:
+          campaign_id:
+            type: string
+          seen:
+            type: number
+          timestamp:
+            type: string
+          windowKey:
+            type: string
+  WriteWindow:
+    operator: streamBenchmark.WriteWindow
+connections:
+  (:
+  - (KafkaSubscribe
+  - (Clock
+  CampaignWindow)seen:
+  - seen(WindowCollect
+  CampaignWindow)timestamp:
+  - timestamp(WindowCollect
+  CampaignWindow)windowKey:
+  - windowKey(WindowCollect
+  Clock)~:
+  - (WindowRelease
+  Count):
+  - )~
+  DistinctWindows)~.campaign_id:
+  - ~(Count
+  - campaign_id(WriteWindow
+  DistinctWindows)~.seen:
+  - seen(WriteWindow
+  DistinctWindows)~.timestamp:
+  - (Value
+  - value.timestamp(MemoryWrite
+  - timestamp(WriteWindow
+  DistinctWindows)~.windowKey:
+  - key(MemoryWrite
+  Evaluate):
+  - (Filter.filter
+  Filter)~.ad_id:
+  - (RedisRead
+  Filter)~.event_time:
+  - event_time(CampaignWindow
+  Filter.filter)event_type:
+  - event_type(Evaluate
+  JSONRead)item:
+  - ~(Filter
+  KafkaSubscribe)~.value:
+  - (JSONRead
+  MemoryWrite):
+  - (SemaphoreV
+  RedisRead):
+  - campaign_id(CampaignWindow
+  - campaign_id(WindowCollect
+  SemaphoreP):
+  - value.seen(MemoryWrite
+  Value):
+  - (SemaphoreP
+  WindowRelease):
+  - (DistinctWindows

@@ -1,0 +1,23 @@
+name: ""
+displayName: ""
+icon: ""
+shortDescription: ""
+description: ""
+services:
+  main:
+    in:
+      type: primitive
+    out:
+      type: boolean
+operators:
+  Evaluate:
+    operator: slang.data.Evaluate
+    properties:
+      expression: isNull(x)
+      variables:
+      - x
+connections:
+  (:
+  - x(Evaluate
+  Evaluate):
+  - )

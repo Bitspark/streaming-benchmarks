@@ -1,0 +1,118 @@
+name: ""
+displayName: ""
+icon: ""
+shortDescription: ""
+description: ""
+services:
+  main:
+    in:
+      type: map
+      map:
+        campaign_id:
+          type: string
+        event_time:
+          type: string
+    out:
+      type: map
+      map:
+        seen:
+          type: number
+        timestamp:
+          type: string
+        windowKey:
+          type: string
+operators:
+  Evaluate1:
+    operator: slang.data.Evaluate
+    properties:
+      expression: x+1
+      variables:
+      - x
+  MemoryRead:
+    operator: slang.database.MemoryRead
+    properties:
+      store: campaignBuckets
+    generics:
+      keyType:
+        type: map
+        map:
+          timestamp:
+            type: string
+      valueType:
+        type: map
+        map:
+          seen:
+            type: number
+          timestamp:
+            type: string
+  MemoryWrite:
+    operator: slang.database.MemoryWrite
+    properties:
+      store: campaignBuckets
+    generics:
+      valueType:
+        type: map
+        map:
+          seen:
+            type: number
+          timestamp:
+            type: string
+  SemaphoreP:
+    operator: slang.control.SemaphoreP
+    properties:
+      semaphore: windowSem
+    generics:
+      itemType:
+        type: map
+        map:
+          timestamp:
+            type: string
+          windowKey:
+            type: string
+  SemaphoreV:
+    operator: slang.control.SemaphoreV
+    properties:
+      semaphore: windowSem
+    generics:
+      itemType:
+        type: trigger
+  Value1:
+    operator: slang.data.Value
+    properties:
+      value:
+        seen: 0
+    generics:
+      valueType:
+        type: map
+        map:
+          seen:
+            type: number
+  WindowKey:
+    operator: streamBenchmark.WindowKey
+connections:
+  (:
+  - (WindowKey
+  Evaluate1):
+  - value.seen(MemoryWrite
+  - )seen
+  MemoryRead)seen:
+  - x(Evaluate1
+  MemoryRead)timestamp:
+  - value.timestamp(MemoryWrite
+  - )timestamp
+  MemoryRead.creator)timestamp:
+  - timestamp(MemoryRead.creator
+  - (Value1
+  MemoryWrite):
+  - (SemaphoreV
+  SemaphoreP)timestamp:
+  - keyValue.timestamp(MemoryRead
+  SemaphoreP)windowKey:
+  - key(MemoryRead
+  Value1)seen:
+  - seen(MemoryRead.creator
+  WindowKey):
+  - (SemaphoreP
+  WindowKey)windowKey:
+  - key(MemoryWrite
+  - )windowKey

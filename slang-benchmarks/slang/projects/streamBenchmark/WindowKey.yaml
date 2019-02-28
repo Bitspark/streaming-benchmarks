@@ -1,0 +1,80 @@
+name: ""
+displayName: ""
+icon: ""
+shortDescription: ""
+description: ""
+services:
+  main:
+    in:
+      type: map
+      map:
+        campaign_id:
+          type: string
+        event_time:
+          type: string
+    out:
+      type: map
+      map:
+        timestamp:
+          type: string
+        windowKey:
+          type: string
+operators:
+  Convert:
+    operator: slang.data.Convert
+    generics:
+      fromType:
+        type: string
+      toType:
+        type: number
+  Convert1:
+    operator: slang.data.Convert
+    generics:
+      fromType:
+        type: number
+      toType:
+        type: string
+  Evaluate:
+    operator: slang.data.Evaluate
+    properties:
+      expression: floor(event_time/10000)
+      variables:
+      - event_time
+  Evaluate1:
+    operator: slang.data.Evaluate
+    properties:
+      expression: x*10000
+      variables:
+      - x
+  Format:
+    operator: slang.string.Format
+    properties:
+      variables:
+      - campaign_id
+      - event_bucket
+  Value:
+    operator: slang.data.Value
+    properties:
+      value: '%s-%.0f'
+    generics:
+      valueType:
+        type: string
+connections:
+  Convert):
+  - event_time(Evaluate
+  Convert1):
+  - )timestamp
+  Evaluate):
+  - event_bucket(Format
+  - x(Evaluate1
+  Evaluate1):
+  - (Convert1
+  Format):
+  - )windowKey
+  Value):
+  - format(Format
+  campaign_id(:
+  - (Value
+  - campaign_id(Format
+  event_time(:
+  - (Convert
