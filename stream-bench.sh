@@ -161,6 +161,10 @@ run() {
     SPARK_FILE="$SPARK_DIR.tgz"
     fetch_untar_file "$SPARK_FILE" "$APACHE_MIRROR/spark/spark-$SPARK_VERSION/$SPARK_FILE"
 
+    #Copy Slang operators
+    mkdir -p $HOME/slang
+    cp -r ./slang-benchmarks/slang/* $HOME/slang/
+
   elif [ "START_ZK" = "$OPERATION" ];
   then
     start_if_needed dev_zookeeper ZooKeeper 10 "$STORM_DIR/bin/storm" dev-zookeeper
@@ -285,6 +289,7 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+    sh ./copy-results.sh SLANG
   elif [ "STORM_TEST" = "$OPERATION" ];
   then
     run "START_ZK"
@@ -300,6 +305,7 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+    sh ./copy-results.sh STORM
   elif [ "FLINK_TEST" = "$OPERATION" ];
   then
     run "START_ZK"
@@ -315,6 +321,7 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+    sh ./copy-results.sh FLINK
   elif [ "SPARK_TEST" = "$OPERATION" ];
   then
     run "START_ZK"
@@ -330,6 +337,7 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+    sh ./copy-results.sh SPARK
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
     run "STOP_LOAD"

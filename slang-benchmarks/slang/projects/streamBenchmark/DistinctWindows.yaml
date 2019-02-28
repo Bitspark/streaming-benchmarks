@@ -51,7 +51,7 @@ operators:
   Evaluate:
     operator: slang.data.Evaluate
     properties:
-      expression: ""
+      expression: campaign_id_a==campaign_id_b&&timestamp_a==timestamp_b
       variables:
       - campaign_id_a
       - timestamp_a
